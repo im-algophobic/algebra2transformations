@@ -107,7 +107,6 @@
         margin: 0 0 8px;
         font-size: 1.1rem;
         letter-spacing: -0.01em;
-        /* text wrapping for long titles */
         word-wrap: break-word;
         overflow-wrap: anywhere;
         white-space: normal;
@@ -179,56 +178,187 @@
 
     <footer>All games launch in fullscreen HTML pages included in this project.</footer>
 
-    <!-- Load the smart, pretty games list -->
-<script src="games_pretty.js"></script>
+    <!-- Load the clean game list you already had working -->
+    <script src="games_clean.js"></script>
 
-<script>
-  const grid = document.getElementById("grid");
-  const filterInput = document.getElementById("filter");
-  const emptyState = document.getElementById("empty");
+    <script>
+      const grid = document.getElementById("grid");
+      const filterInput = document.getElementById("filter");
+      const emptyState = document.getElementById("empty");
 
-  const createCard = (game) => {
-    const card = document.createElement("article");
-    card.className = "card";
-    card.setAttribute("role", "listitem");
+      // Make a nice title from the stored game + filename
+      const prettyTitle = (game) => {
+        let base = game.title || "";
 
-    const title = document.createElement("h2");
-    title.textContent = game.title;
+        if (!base) {
+          base = game.file || "";
+        }
 
-    const desc = document.createElement("p");
-    desc.textContent = game.description;
+        // remove .html
+        base = base.replace(/\.html$/i, "");
 
-    const link = document.createElement("a");
-    link.href = game.file;
-    link.textContent = "Play fullscreen";
-    link.setAttribute("aria-label", `Play ${game.title} in fullscreen`);
+        // strip leading cl
+        if (base.toLowerCase().startsWith("cl")) {
+          base = base.slice(2);
+        }
 
-    const icon = document.createElement("span");
-    icon.textContent = "↗";
-    link.appendChild(icon);
+        // replace separators with spaces
+        base = base.replace(/[_\-]+/g, " ");
 
-    card.append(title, desc, link);
-    return card;
-  };
+        // separate letters-digits boundaries
+        base = base
+          .replace(/([A-Za-z])([0-9])/g, "$1 $2")
+          .replace(/([0-9])([A-Za-z])/g, "$1 $2");
 
-  const render = (query = "") => {
-    const normalized = query.trim().toLowerCase();
+        base = base.trim().replace(/\s+/g, " ");
 
-    const matches = games.filter((game) =>
-      [game.title, game.description].some((value) =>
-        value.toLowerCase().includes(normalized)
-      )
-    );
+        const key = base.toLowerCase().replace(/\s+/g, "");
 
-    grid.replaceChildren(...matches.map(createCard));
-    emptyState.hidden = matches.length > 0;
-  };
+        const specials = {
+          bigtowertinysquare: "Big Tower Tiny Square",
+          drivemad: "Drive Mad",
+          driftboss: "Drift Boss",
+          monkeymart: "Monkey Mart",
+          retrobowl: "Retro Bowl",
+          ovo: "OvO",
+          ovofixed: "OvO (Fixed)",
+          paperio: "Paper.io",
+          madalinstuntcarsmultiplayerfixed: "Madalin Stunt Cars Multiplayer",
+          adofai: "A Dance of Fire and Ice",
+          bitlife: "BitLife",
+          vex: "Vex",
+          vex2: "Vex 2",
+          vex3: "Vex 3",
+          vex3xmas: "Vex 3 Xmas",
+          vex4: "Vex 4",
+          vex5: "Vex 5",
+          vex6: "Vex 6",
+          vex7: "Vex 7",
+          vex8: "Vex 8",
+          vexchallenges: "Vex Challenges",
+          vexx3m: "Vex X3M",
+          vexx3m2: "Vex X3M 2",
+          "1v1lol": "1v1.LOL",
+        };
 
-  filterInput.addEventListener("input", (event) =>
-    render(event.target.value)
-  );
+        if (specials[key]) return specials[key];
 
-  render();
-</script>
+        const acronyms = {
+          nba: "NBA",
+          gta: "GTA",
+          ds: "DS",
+          wii: "Wii",
+          ww: "WW",
+          rpg: "RPG",
+          fps: "FPS",
+          io: "io",
+          vr: "VR",
+        };
+
+        return base
+          .split(" ")
+          .filter(Boolean)
+          .map((tok) => {
+            const low = tok.toLowerCase();
+            if (acronyms[low]) return acronyms[low];
+            if (/^[0-9]+$/.test(tok)) return tok;
+            return tok.charAt(0).toUpperCase() + tok.slice(1);
+          })
+          .join(" ");
+      };
+
+      const describeGame = (title) => {
+        const tl = title.toLowerCase();
+        if (tl.includes("vex")) {
+          return "Fast-paced stickman precision platformer full of deadly traps.";
+        }
+        if (tl.includes("drive mad")) {
+          return "Chaotic physics driving game with collapsing bridges and wild obstacles.";
+        }
+        if (tl.includes("drift boss")) {
+          return "Casual drifting game where you time turns to stay on narrow platforms.";
+        }
+        if (tl.includes("monkey mart")) {
+          return "Cute idle management game where you run a busy monkey supermarket.";
+        }
+        if (tl.includes("retro bowl")) {
+          return "Retro-style American football game mixing coaching and on-field plays.";
+        }
+        if (tl.includes("big tower tiny square")) {
+          return "Brutal precision platformer climbing a huge tower to rescue your pineapple.";
+        }
+        if (tl.includes("paper.io")) {
+          return "Territory-capturing .io game where you expand your colored area and cut off enemies.";
+        }
+        if (tl.includes("1v1.lol") || tl.includes("1v1 lol")) {
+          return "1v1 build-and-shoot arena game inspired by battle royale titles.";
+        }
+        if (tl.includes("ovo")) {
+          return "Minimalist parkour platformer focused on momentum and speedrunning.";
+        }
+        if (tl.includes("a dance of fire and ice")) {
+          return "Rhythm game where you guide two orbiting planets down tricky tracks to the beat.";
+        }
+        if (tl.includes("bitlife")) {
+          return "Life simulator where you make choices from birth to death and see how your story unfolds.";
+        }
+        if (tl.includes("mario")) {
+          return "Classic-style Mario game with platforming, powerups, and familiar characters.";
+        }
+        if (tl.includes("gta")) {
+          return "Open-world crime sandbox inspired by the Grand Theft Auto series.";
+        }
+        if (tl.includes("eaglercraft") || tl.includes("minecraft")) {
+          return "Browser-based Minecraft-style sandbox you can play directly in your tab.";
+        }
+        return `Play ${title}, a browser game, in fullscreen.`;
+      };
+
+      const createCard = (game) => {
+        const card = document.createElement("article");
+        card.className = "card";
+        card.setAttribute("role", "listitem");
+
+        const titleEl = document.createElement("h2");
+        const niceTitle = prettyTitle(game);
+        titleEl.textContent = niceTitle;
+
+        const descEl = document.createElement("p");
+        descEl.textContent = describeGame(niceTitle);
+
+        const link = document.createElement("a");
+        link.href = game.file;
+        link.textContent = "Play fullscreen";
+        link.setAttribute("aria-label", `Play ${niceTitle} in fullscreen`);
+
+        const icon = document.createElement("span");
+        icon.textContent = "↗";
+        link.appendChild(icon);
+
+        card.append(titleEl, descEl, link);
+        return card;
+      };
+
+      const render = (query = "") => {
+        const normalized = query.trim().toLowerCase();
+
+        const matches = games.filter((game) => {
+          const title = prettyTitle(game);
+          const desc = describeGame(title);
+          return [title, desc, game.file].some((value) =>
+            value.toLowerCase().includes(normalized)
+          );
+        });
+
+        grid.replaceChildren(...matches.map(createCard));
+        emptyState.hidden = matches.length > 0;
+      };
+
+      filterInput.addEventListener("input", (event) =>
+        render(event.target.value)
+      );
+
+      render();
+    </script>
   </body>
 </html>
