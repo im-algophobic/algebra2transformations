@@ -23,7 +23,8 @@
         margin: 0;
         min-height: 100vh;
         font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        background: radial-gradient(circle at top left, rgba(56, 189, 248, 0.15), transparent 25%),
+        background:
+          radial-gradient(circle at top left, rgba(56, 189, 248, 0.15), transparent 25%),
           radial-gradient(circle at bottom right, rgba(99, 102, 241, 0.12), transparent 28%),
           var(--bg);
         color: var(--text);
@@ -151,10 +152,16 @@
     <header>
       <h1>Arcade Hub</h1>
       <p class="lead">
-        Pick a game below to launch it in full screen. With over 1000 available games, everything here loads instantly.
+        Pick a game below to launch it in full screen. Over 1000 games are available instantly.
       </p>
+
       <div class="search">
-        <input id="filter" type="search" placeholder="Search games…" aria-label="Filter games" />
+        <input
+          id="filter"
+          type="search"
+          placeholder="Search games…"
+          aria-label="Filter games"
+        />
       </div>
     </header>
 
@@ -165,10 +172,9 @@
 
     <footer>All games launch in fullscreen HTML pages included in this project.</footer>
 
-    <!-- 🔥 Load your full games list -->
-    <script src="games.js"></script>
+    <!-- Load cleaned game list -->
+    <script src="games_clean.js"></script>
 
-    <!-- 🔥 Render cards and search -->
     <script>
       const grid = document.getElementById("grid");
       const filterInput = document.getElementById("filter");
@@ -200,6 +206,7 @@
 
       const render = (query = "") => {
         const normalized = query.trim().toLowerCase();
+
         const matches = games.filter((game) =>
           [game.title, game.description, game.file].some((value) =>
             value.toLowerCase().includes(normalized)
