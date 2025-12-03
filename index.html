@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>algophobe arcade</title>
+    <title>Arcade Hub</title>
 
     <style>
       :root {
@@ -158,11 +158,7 @@
     <header>
       <h1>Arcade Hub</h1>
       <p class="lead">
-        (made by vincent) Pick a game below to launch it in full screen. OVER <i>1000</i> GAMES TO CHOOSE FROM! Use the search bar for easy access to your favorite games. 
-
-        <b> DATA SAVES ON ALL GAMES</b>
-
-        changelog, buglog, and devlog: https://docs.google.com/document/d/1amIyxkquQM6y8NCgKJA2R5IG7UtIRf3-daCj9Hw9AX8/edit?tab=t.0
+        Pick a game below to launch it in full screen. Over 1000 games are available instantly.
       </p>
 
       <div class="search">
@@ -177,39 +173,34 @@
 
     <main>
       <div id="grid" class="grid" role="list"></div>
-      <div id="empty" class="empty-state" hidden>No matches found.</div>
+      <div id="empty" class="empty-state">Loading games from GitHub…</div>
     </main>
 
     <footer>All games launch in fullscreen HTML pages included in this project.</footer>
-
-    <!-- Load the clean game list you already had working -->
-    <script src="games_clean.js"></script>
 
     <script>
       const grid = document.getElementById("grid");
       const filterInput = document.getElementById("filter");
       const emptyState = document.getElementById("empty");
 
-      // Make a nice title from the stored game + filename
-      const prettyTitle = (game) => {
-        let base = game.title || "";
+      let games = [];
 
-        if (!base) {
-          base = game.file || "";
-        }
+      const OWNER = "im-algophobic";
+      const REPO = "algebra2transformations";
+      const BRANCH = "main";
+      const TREE_URL = `https://api.github.com/repos/${OWNER}/${REPO}/git/trees/${BRANCH}?recursive=1`;
 
-        // remove .html
+      const prettyTitleFromPath = (path) => {
+        let base = path.replace(/\\/g, "/");
+        const parts = base.split("/");
+        base = parts[parts.length - 1];
         base = base.replace(/\.html$/i, "");
 
-        // strip leading cl
         if (base.toLowerCase().startsWith("cl")) {
           base = base.slice(2);
         }
 
-        // replace separators with spaces
         base = base.replace(/[_\-]+/g, " ");
-
-        // separate letters-digits boundaries
         base = base
           .replace(/([A-Za-z])([0-9])/g, "$1 $2")
           .replace(/([0-9])([A-Za-z])/g, "$1 $2");
@@ -324,16 +315,15 @@
         card.setAttribute("role", "listitem");
 
         const titleEl = document.createElement("h2");
-        const niceTitle = prettyTitle(game);
-        titleEl.textContent = niceTitle;
+        titleEl.textContent = game.title;
 
         const descEl = document.createElement("p");
-        descEl.textContent = describeGame(niceTitle);
+        descEl.textContent = game.description;
 
         const link = document.createElement("a");
         link.href = game.file;
         link.textContent = "Play fullscreen";
-        link.setAttribute("aria-label", `Play ${niceTitle} in fullscreen`);
+        link.setAttribute("aria-label", `Play ${game.title} in fullscreen`);
 
         const icon = document.createElement("span");
         icon.textContent = "↗";
@@ -346,23 +336,59 @@
       const render = (query = "") => {
         const normalized = query.trim().toLowerCase();
 
-        const matches = games.filter((game) => {
-          const title = prettyTitle(game);
-          const desc = describeGame(title);
-          return [title, desc, game.file].some((value) =>
+        const matches = games.filter((game) =>
+          [game.title, game.description, game.file].some((value) =>
             value.toLowerCase().includes(normalized)
-          );
-        });
+          )
+        );
 
         grid.replaceChildren(...matches.map(createCard));
         emptyState.hidden = matches.length > 0;
+        if (!matches.length) {
+          emptyState.textContent = "No matches found.";
+        }
+      };
+
+      const loadGames = async () => {
+        try {
+          const res = await fetch(TREE_URL);
+          if (!res.ok) throw new Error("GitHub API error " + res.status);
+          const data = await res.json();
+
+          const htmlFiles = data.tree.filter(
+            (item) =>
+              item.type === "blob" &&
+              item.path.toLowerCase().endsWith(".html") &&
+              item.path.toLowerCase() !== "index.html"
+          );
+
+          games = htmlFiles.map((item) => {
+            const file = item.path;
+            const title = prettyTitleFromPath(file);
+            const description = describeGame(title);
+            return { title, file, description };
+          });
+
+          if (games.length === 0) {
+            emptyState.hidden = false;
+            emptyState.textContent = "No HTML games found in this repo.";
+            return;
+          }
+
+          emptyState.hidden = true;
+          render();
+        } catch (err) {
+          console.error(err);
+          emptyState.hidden = false;
+          emptyState.textContent = "Failed to load games from GitHub.";
+        }
       };
 
       filterInput.addEventListener("input", (event) =>
         render(event.target.value)
       );
 
-      render();
+      loadGames();
     </script>
   </body>
 </html>
