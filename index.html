@@ -180,55 +180,55 @@
     <footer>All games launch in fullscreen HTML pages included in this project.</footer>
 
     <!-- Load the smart, pretty games list -->
-    <script src="games_pretty.js"></script>
+<script src="games_pretty.js"></script>
 
-    <script>
-      const grid = document.getElementById("grid");
-      const filterInput = document.getElementById("filter");
-      const emptyState = document.getElementById("empty");
+<script>
+  const grid = document.getElementById("grid");
+  const filterInput = document.getElementById("filter");
+  const emptyState = document.getElementById("empty");
 
-      const createCard = (game) => {
-        const card = document.createElement("article");
-        card.className = "card";
-        card.setAttribute("role", "listitem");
+  const createCard = (game) => {
+    const card = document.createElement("article");
+    card.className = "card";
+    card.setAttribute("role", "listitem");
 
-        const title = document.createElement("h2");
-        title.textContent = game.title;
+    const title = document.createElement("h2");
+    title.textContent = game.title;
 
-        const desc = document.createElement("p");
-        desc.textContent = game.description;
+    const desc = document.createElement("p");
+    desc.textContent = game.description;
 
-        const link = document.createElement("a");
-        link.href = game.file;
-        link.textContent = "Play fullscreen";
-        link.setAttribute("aria-label", `Play ${game.title} in fullscreen`);
+    const link = document.createElement("a");
+    link.href = game.file;
+    link.textContent = "Play fullscreen";
+    link.setAttribute("aria-label", `Play ${game.title} in fullscreen`);
 
-        const icon = document.createElement("span");
-        icon.textContent = "↗";
-        link.appendChild(icon);
+    const icon = document.createElement("span");
+    icon.textContent = "↗";
+    link.appendChild(icon);
 
-        card.append(title, desc, link);
-        return card;
-      };
+    card.append(title, desc, link);
+    return card;
+  };
 
-      const render = (query = "") => {
-        const normalized = query.trim().toLowerCase();
+  const render = (query = "") => {
+    const normalized = query.trim().toLowerCase();
 
-        const matches = games.filter((game) =>
-          [game.title, game.description].some((value) =>
-            value.toLowerCase().includes(normalized)
-          )
-        );
+    const matches = games.filter((game) =>
+      [game.title, game.description].some((value) =>
+        value.toLowerCase().includes(normalized)
+      )
+    );
 
-        grid.replaceChildren(...matches.map(createCard));
-        emptyState.hidden = matches.length > 0;
-      };
+    grid.replaceChildren(...matches.map(createCard));
+    emptyState.hidden = matches.length > 0;
+  };
 
-      filterInput.addEventListener("input", (event) =>
-        render(event.target.value)
-      );
+  filterInput.addEventListener("input", (event) =>
+    render(event.target.value)
+  );
 
-      render();
-    </script>
+  render();
+</script>
   </body>
 </html>
