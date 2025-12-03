@@ -107,12 +107,19 @@
         margin: 0 0 8px;
         font-size: 1.1rem;
         letter-spacing: -0.01em;
+        /* text wrapping for long titles */
+        word-wrap: break-word;
+        overflow-wrap: anywhere;
+        white-space: normal;
       }
 
       .card p {
         margin: 0 0 14px;
         color: var(--muted);
         line-height: 1.5;
+        word-wrap: break-word;
+        overflow-wrap: anywhere;
+        white-space: normal;
       }
 
       .card a {
@@ -172,8 +179,8 @@
 
     <footer>All games launch in fullscreen HTML pages included in this project.</footer>
 
-    <!-- Load cleaned game list -->
-    <script src="games_clean.js"></script>
+    <!-- Load the smart, pretty games list -->
+    <script src="games_pretty.js"></script>
 
     <script>
       const grid = document.getElementById("grid");
@@ -208,7 +215,7 @@
         const normalized = query.trim().toLowerCase();
 
         const matches = games.filter((game) =>
-          [game.title, game.description, game.file].some((value) =>
+          [game.title, game.description].some((value) =>
             value.toLowerCase().includes(normalized)
           )
         );
