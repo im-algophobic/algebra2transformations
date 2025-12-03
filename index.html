@@ -22,7 +22,8 @@
       body {
         margin: 0;
         min-height: 100vh;
-        font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
         background:
           radial-gradient(circle at top left, rgba(56, 189, 248, 0.15), transparent 25%),
           radial-gradient(circle at bottom right, rgba(99, 102, 241, 0.12), transparent 28%),
@@ -94,7 +95,8 @@
         background: rgba(30, 41, 59, 0.85);
         border: 1px solid rgba(148, 163, 184, 0.25);
         box-shadow: 0 12px 35px rgba(15, 23, 42, 0.35);
-        transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease;
+        transition: transform 150ms ease, box-shadow 150ms ease,
+          border-color 150ms ease;
       }
 
       .card:hover {
@@ -112,15 +114,6 @@
         white-space: normal;
       }
 
-      .card p {
-        margin: 0 0 14px;
-        color: var(--muted);
-        line-height: 1.5;
-        word-wrap: break-word;
-        overflow-wrap: anywhere;
-        white-space: normal;
-      }
-
       .card a {
         display: inline-flex;
         align-items: center;
@@ -129,7 +122,11 @@
         text-decoration: none;
         padding: 10px 12px;
         border-radius: 10px;
-        background: linear-gradient(90deg, rgba(56, 189, 248, 0.15), rgba(99, 102, 241, 0.18));
+        background: linear-gradient(
+          90deg,
+          rgba(56, 189, 248, 0.15),
+          rgba(99, 102, 241, 0.18)
+        );
         border: 1px solid rgba(148, 163, 184, 0.3);
         font-weight: 600;
       }
@@ -175,188 +172,107 @@
 
     <main>
       <div id="grid" class="grid" role="list"></div>
-      <div id="empty" class="empty-state">Loading games from GitHub…</div>
+      <div id="empty" class="empty-state">Loading games…</div>
     </main>
 
-    <footer>(made by algophobic)</footer>
+    <footer>All games launch in fullscreen HTML pages included in this project.</footer>
 
     <script>
-      const grid = document.getElementById("grid");
-      const filterInput = document.getElementById("filter");
-      const emptyState = document.getElementById("empty");
-
-      let games = [];
-
       const OWNER = "im-algophobic";
       const REPO = "algebra2transformations";
       const BRANCH = "main";
       const TREE_URL = `https://api.github.com/repos/${OWNER}/${REPO}/git/trees/${BRANCH}?recursive=1`;
 
-      const prettyTitleFromPath = (path) => {
+      const grid = document.getElementById("grid");
+      const filterInput = document.getElementById("filter");
+      const emptyState = document.getElementById("empty");
+
+      // Visible text obfuscation (for display only)
+      function obfuscateName(name) {
+        return name
+          .replace(/o/gi, "0")
+          .replace(/i/gi, "1")
+          .replace(/l/gi, "1"); // delete this line if you don't want L → 1
+      }
+
+      // Clean, human-readable title from file path (used for search)
+      function cleanTitleFromPath(path) {
         let base = path.replace(/\\/g, "/");
         const parts = base.split("/");
-        base = parts[parts.length - 1];
-        base = base.replace(/\.html$/i, "");
+        let n = parts[parts.length - 1]; // filename only
 
-        if (base.toLowerCase().startsWith("cl")) {
-          base = base.slice(2);
+        n = n.replace(/\.html$/i, "");
+
+        // remove leading "cl"
+        if (n.toLowerCase().startsWith("cl")) {
+          n = n.slice(2);
         }
 
-        base = base.replace(/[_\-]+/g, " ");
-        base = base
+        // strip leading numbers/dashes like "01-" etc.
+        n = n.replace(/^[0-9\-_]+/, "");
+
+        // replace separators with space
+        n = n.replace(/[-_]+/g, " ");
+
+        // insert spaces between letters and digits
+        n = n
           .replace(/([A-Za-z])([0-9])/g, "$1 $2")
           .replace(/([0-9])([A-Za-z])/g, "$1 $2");
 
-        base = base.trim().replace(/\s+/g, " ");
+        n = n.trim().replace(/\s+/g, " ");
 
-        const key = base.toLowerCase().replace(/\s+/g, "");
+        // capitalize words
+        n = n.replace(/\b\w/g, (c) => c.toUpperCase());
 
-        const specials = {
-          bigtowertinysquare: "Big Tower Tiny Square",
-          drivemad: "Drive Mad",
-          driftboss: "Drift Boss",
-          monkeymart: "Monkey Mart",
-          retrobowl: "Retro Bowl",
-          ovo: "OvO",
-          ovofixed: "OvO (Fixed)",
-          paperio: "Paper.io",
-          madalinstuntcarsmultiplayerfixed: "Madalin Stunt Cars Multiplayer",
-          adofai: "A Dance of Fire and Ice",
-          bitlife: "BitLife",
-          vex: "Vex",
-          vex2: "Vex 2",
-          vex3: "Vex 3",
-          vex3xmas: "Vex 3 Xmas",
-          vex4: "Vex 4",
-          vex5: "Vex 5",
-          vex6: "Vex 6",
-          vex7: "Vex 7",
-          vex8: "Vex 8",
-          vexchallenges: "Vex Challenges",
-          vexx3m: "Vex X3M",
-          vexx3m2: "Vex X3M 2",
-          "1v1lol": "1v1.LOL",
-        };
-
-        if (specials[key]) return specials[key];
-
-        const acronyms = {
-          nba: "NBA",
-          gta: "GTA",
-          ds: "DS",
-          wii: "Wii",
-          ww: "WW",
-          rpg: "RPG",
-          fps: "FPS",
-          io: "io",
-          vr: "VR",
-        };
-
-        return base
-          .split(" ")
-          .filter(Boolean)
-          .map((tok) => {
-            const low = tok.toLowerCase();
-            if (acronyms[low]) return acronyms[low];
-            if (/^[0-9]+$/.test(tok)) return tok;
-            return tok.charAt(0).toUpperCase() + tok.slice(1);
-          })
-          .join(" ");
-      };
-
-      const describeGame = (title) => {
-        const tl = title.toLowerCase();
-        if (tl.includes("vex")) {
-          return "Fast-paced stickman precision platformer full of deadly traps.";
-        }
-        if (tl.includes("drive mad")) {
-          return "Chaotic physics driving game with collapsing bridges and wild obstacles.";
-        }
-        if (tl.includes("drift boss")) {
-          return "Casual drifting game where you time turns to stay on narrow platforms.";
-        }
-        if (tl.includes("monkey mart")) {
-          return "Cute idle management game where you run a busy monkey supermarket.";
-        }
-        if (tl.includes("retro bowl")) {
-          return "Retro-style American football game mixing coaching and on-field plays.";
-        }
-        if (tl.includes("big tower tiny square")) {
-          return "Brutal precision platformer climbing a huge tower to rescue your pineapple.";
-        }
-        if (tl.includes("paper.io")) {
-          return "Territory-capturing .io game where you expand your colored area and cut off enemies.";
-        }
-        if (tl.includes("1v1.lol") || tl.includes("1v1 lol")) {
-          return "1v1 build-and-shoot arena game inspired by battle royale titles.";
-        }
-        if (tl.includes("ovo")) {
-          return "Minimalist parkour platformer focused on momentum and speedrunning.";
-        }
-        if (tl.includes("a dance of fire and ice")) {
-          return "Rhythm game where you guide two orbiting planets down tricky tracks to the beat.";
-        }
-        if (tl.includes("bitlife")) {
-          return "Life simulator where you make choices from birth to death and see how your story unfolds.";
-        }
-        if (tl.includes("mario")) {
-          return "Classic-style Mario game with platforming, powerups, and familiar characters.";
-        }
-        if (tl.includes("gta")) {
-          return "Open-world crime sandbox inspired by the Grand Theft Auto series.";
-        }
-        if (tl.includes("eaglercraft") || tl.includes("minecraft")) {
-          return "Browser-based Minecraft-style sandbox you can play directly in your tab.";
-        }
-        return `Play ${title}, a browser game, in fullscreen.`;
-      };
+        return n || path;
+      }
 
       const createCard = (game) => {
         const card = document.createElement("article");
         card.className = "card";
         card.setAttribute("role", "listitem");
 
-        const titleEl = document.createElement("h2");
-        titleEl.textContent = game.title;
-
-        const descEl = document.createElement("p");
-        descEl.textContent = game.description;
+        const title = document.createElement("h2");
+        title.textContent = game.displayTitle; // obfuscated name
 
         const link = document.createElement("a");
         link.href = game.file;
-        link.textContent = "Play fullscreen";
-        link.setAttribute("aria-label", `Play ${game.title} in fullscreen`);
+        link.textContent = "Play";
+        link.setAttribute("aria-label", `Play ${game.originalTitle}`);
 
         const icon = document.createElement("span");
         icon.textContent = "↗";
         link.appendChild(icon);
 
-        card.append(titleEl, descEl, link);
+        card.append(title, link);
         return card;
       };
 
-      const render = (query = "") => {
+      let games = [];
+
+      function render(query = "") {
         const normalized = query.trim().toLowerCase();
 
-        const matches = games.filter((game) =>
-          [game.title, game.description, game.file].some((value) =>
-            value.toLowerCase().includes(normalized)
-          )
-        );
+        const matches = games.filter((game) => {
+          // search using CLEAN name + file path, not obfuscated title
+          return (
+            game.originalTitle.toLowerCase().includes(normalized) ||
+            game.file.toLowerCase().includes(normalized)
+          );
+        });
 
         grid.replaceChildren(...matches.map(createCard));
         emptyState.hidden = matches.length > 0;
-        if (!matches.length) {
+        if (!matches.length && normalized) {
           emptyState.textContent = "No matches found.";
+        } else if (!normalized && !matches.length) {
+          emptyState.textContent = "No games found.";
         }
-      };
+      }
 
-      const loadGames = async () => {
-        try {
-          const res = await fetch(TREE_URL);
-          if (!res.ok) throw new Error("GitHub API error " + res.status);
-          const data = await res.json();
-
+      fetch(TREE_URL)
+        .then((res) => res.json())
+        .then((data) => {
           const htmlFiles = data.tree.filter(
             (item) =>
               item.type === "blob" &&
@@ -364,33 +280,34 @@
               item.path.toLowerCase() !== "index.html"
           );
 
-          games = htmlFiles.map((item) => {
-            const file = item.path;
-            const title = prettyTitleFromPath(file);
-            const description = describeGame(title);
-            return { title, file, description };
+          games = htmlFiles.map((file) => {
+            const originalTitle = cleanTitleFromPath(file.path);
+            const displayTitle = obfuscateName(originalTitle);
+            return {
+              originalTitle,
+              displayTitle,
+              file: file.path,
+            };
           });
 
-          if (games.length === 0) {
+          if (!games.length) {
             emptyState.hidden = false;
-            emptyState.textContent = "No HTML games found in this repo.";
+            emptyState.textContent = "No games found.";
             return;
           }
 
           emptyState.hidden = true;
           render();
-        } catch (err) {
+        })
+        .catch((err) => {
           console.error(err);
           emptyState.hidden = false;
-          emptyState.textContent = "Failed to load games from GitHub.";
-        }
-      };
+          emptyState.textContent = "Failed to load games.";
+        });
 
-      filterInput.addEventListener("input", (event) =>
-        render(event.target.value)
-      );
-
-      loadGames();
+      filterInput.addEventListener("input", (e) => {
+        render(e.target.value);
+      });
     </script>
   </body>
 </html>
